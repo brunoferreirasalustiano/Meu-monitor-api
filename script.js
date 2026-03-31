@@ -1,3 +1,6 @@
+// 1. ENDEREÇO DO SERVIDOR NA NUVEM
+const API_URL = "https://monitorapi.onrender.com";
+
 // ==========================================
 // 1. VERIFICAÇÃO DE ACESSO E USUÁRIO LOGADO
 // ==========================================
@@ -112,9 +115,9 @@ async function trocarSlot(numero) {
     atualizarGraficoNaTela();
 
     try {
-        // 👇 AGORA ENVIAMOS O TOKEN DE AUTORIZAÇÃO 👇
         const token = localStorage.getItem('token_monitor');
-        const response = await fetch(`http://localhost:3000/obter-slot?slot=${slotAtivo}`, {
+        // Atualizar para usar API_URL
+        const response = await fetch(`${API_URL}/obter-slot?slot=${slotAtivo}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
@@ -135,10 +138,9 @@ async function trocarSlot(numero) {
 // ==========================================
 // 4. MONITORAMENTO PRINCIPAL
 // ==========================================
-let requisicaoEmAndamento = false; // 🔒 Nossa trava de segurança
+let requisicaoEmAndamento = false; 
 
 async function verificarStatusAPI() {
-    // Se já estiver esperando uma resposta, ignora o novo clique
     if (requisicaoEmAndamento) return; 
     
     const statusEl = document.querySelector('.status');
@@ -148,11 +150,12 @@ async function verificarStatusAPI() {
 
     if(!statusEl || !tituloModelo) return;
 
-    requisicaoEmAndamento = true; // Tranca a porta para novos pedidos
+    requisicaoEmAndamento = true; 
 
     try {
         const token = localStorage.getItem('token_monitor');
-        const response = await fetch(`http://localhost:3000/testar-api?slot=${slotAtivo}`, {
+        // 🔄 Atualizado para usar API_URL
+        const response = await fetch(`${API_URL}/testar-api?slot=${slotAtivo}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -205,9 +208,8 @@ async function verificarStatusAPI() {
             gaugeFill.style.transform = `rotate(0turn)`;
         }
     } catch (error) {
-        statusEl.innerText = "Servidor Node Offline";
+        statusEl.innerText = "Servidor Offline";
     } finally {
-        // Independentemente de dar certo ou erro, destranca a porta no final
         requisicaoEmAndamento = false; 
     }
 }
@@ -217,7 +219,8 @@ async function verificarStatusAPI() {
 // ==========================================
 async function carregarVisaoGlobal() {
     try {
-        const response = await fetch('http://localhost:3000/status-geral');
+        // 🔄 Atualizado para usar API_URL
+        const response = await fetch(`${API_URL}/status-geral`);
         const data = await response.json();
 
         if (data.sucesso) {
@@ -287,9 +290,9 @@ window.onload = () => {
             };
 
             try {
-                // 👇 AGORA ENVIAMOS O TOKEN DE AUTORIZAÇÃO NA HORA DE SALVAR 👇
                 const token = localStorage.getItem('token_monitor');
-                const response = await fetch('http://localhost:3000/configurar-slot', {
+                // Atualizar para usar API_URL
+                const response = await fetch(`${API_URL}/configurar-slot`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -302,16 +305,14 @@ window.onload = () => {
 
                 if (result.sucesso) {
                     alert(`✅ Slot ${slotAtivo} configurado com sucesso!`);
-                    document.getElementById('api-key').value = ""; // Limpa a senha da tela por segurança
-                    
+                    document.getElementById('api-key').value = ""; 
                     carregarVisaoGlobal();
                     verificarStatusAPI();
                 } else {
-                    // 👇 ADICIONEI ESTE ALERTA PARA NÃO FALHAR EM SILÊNCIO 👇
                     alert(`❌ Falha ao salvar: ${result.mensagem || "Erro desconhecido."}`);
                 }
             } catch (error) {
-                alert("❌ Erro ao conectar com o servidor Node.");
+                alert("❌ Erro ao conectar com o servidor.");
             }
         });
     }
@@ -365,7 +366,7 @@ function baixarRelatorio(event) {
 // 8. CONTROLE DE ATUALIZAÇÃO AUTOMÁTICA
 // ==========================================
 let intervaloVerificacao;
-const TEMPO_ATUALIZACAO = 120000; // 2 minutos para não gastar muitos tokens!
+const TEMPO_ATUALIZACAO = 120000; 
 
 function iniciarMonitoramentoAutomatico() {
     clearInterval(intervaloVerificacao); 
@@ -384,29 +385,34 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+// ==========================================
+// 9. FUNÇÕES DE RECUPERAÇÃO DE SENHA
+// ==========================================
 
-// Função para pedir o código
 async function solicitarCodigo() {
     const usuario = document.getElementById('rec-usuario').value;
     if (!usuario) return alert("Digite o seu usuário primeiro!");
 
-    const response = await fetch('http://localhost:3000/solicitar-recuperacao', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario })
-    });
+    try {
+        // Atualizar para usar API_URL
+        const response = await fetch(`${API_URL}/solicitar-recuperacao`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario })
+        });
 
-    const data = await response.json();
-    alert(data.mensagem); // Avisa que mandou pro terminal
+        const data = await response.json();
+        alert(data.mensagem);
 
-    if (data.sucesso) {
-        // Esconde o pedido de código e mostra os campos da nova senha
-        document.getElementById('passo-pedir-codigo').style.display = 'none';
-        document.getElementById('passo-nova-senha').style.display = 'block';
+        if (data.sucesso) {
+            document.getElementById('passo-pedir-codigo').style.display = 'none';
+            document.getElementById('passo-nova-senha').style.display = 'block';
+        }
+    } catch (e) {
+        alert("Erro no servidor.");
     }
 }
 
-// Função para enviar a nova senha com o código
 async function salvarNovaSenha() {
     const usuario = document.getElementById('rec-usuario').value;
     const codigo = document.getElementById('rec-codigo').value;
@@ -414,17 +420,22 @@ async function salvarNovaSenha() {
 
     if (!codigo || !novaSenha) return alert("Preencha o código e a nova senha!");
 
-    const response = await fetch('http://localhost:3000/redefinir-senha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, codigo, novaSenha })
-    });
+    try {
+        // Atualizar para usar API_URL
+        const response = await fetch(`${API_URL}/redefinir-senha`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, codigo, novaSenha })
+        });
 
-    const data = await response.json();
-    alert(data.mensagem);
+        const data = await response.json();
+        alert(data.mensagem);
 
-    if (data.sucesso) {
-        window.location.reload(); // Recarrega a página para ele fazer login com a senha nova
+        if (data.sucesso) {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert("Erro ao salvar senha.");
     }
 }
 

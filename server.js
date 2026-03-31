@@ -44,7 +44,7 @@ db.serialize(() => {
 });
 
 // ==========================================
-// 🔐 ROTAS DE AUTENTICAÇÃO (LOGIN/CADASTRO)
+//  ROTAS DE AUTENTICAÇÃO (LOGIN/CADASTRO)
 // ==========================================
 app.post('/cadastro', async (req, res) => {
     const { email, senha } = req.body;
@@ -82,22 +82,22 @@ function verificarToken(req, res, next) {
 }
 
 // ==========================================
-// 📊 ROTAS DO MONITOR (PROTEGIDAS)
+//  ROTAS DO MONITOR (PROTEGIDAS)
 // ==========================================
 
-// --- ROTA 1: CONFIGURAR SLOT (Protege a chave se vier em branco) ---
+// --- ROTA 1: CONFIGURAR SLOT 
 app.post('/configurar-slot', verificarToken, (req, res) => {
     const { slot, nome, provedor, key, modelo, limite } = req.body;
     
     if (key && key.trim() !== "") {
-        // Se tem chave nova, atualiza tudo
+       
         const query = `UPDATE slots SET nome = ?, provedor = ?, key = ?, modelo = ?, limite = ?, ativa = 1, acumulado = 0 WHERE id = ?`;
         db.run(query, [nome, provedor, key.trim(), modelo.trim(), limite, slot], function(err) {
             if (err) return res.status(500).json({ sucesso: false, erro: err.message });
             res.json({ sucesso: true });
         });
     } else {
-        // Se a chave veio em branco, mantém a chave atual no banco de dados
+        
         const query = `UPDATE slots SET nome = ?, provedor = ?, modelo = ?, limite = ?, ativa = 1 WHERE id = ?`;
         db.run(query, [nome, provedor, modelo.trim(), limite, slot], function(err) {
             if (err) return res.status(500).json({ sucesso: false, erro: err.message });
@@ -110,13 +110,12 @@ app.post('/configurar-slot', verificarToken, (req, res) => {
 app.get('/testar-api', verificarToken, (req, res) => {
     const numSlot = req.query.slot || 1;
     db.get(`SELECT * FROM slots WHERE id = ?`, [numSlot], async (err, config) => {
-        // O config só nasce aqui dentro, depois da busca no banco!
+       
         if (err || !config || config.ativa === 0) return res.json({ sucesso: false, mensagem: "Não configurado" });
 
         const inicio = Date.now();
         
-        // --- 🚀 ROTEAMENTO UNIVERSAL 🚀 ---
-       // --- 🚀 ROTEAMENTO UNIVERSAL 🚀 ---
+        // ---  ROTEAMENTO UNIVERSAL  ---
         let urlEndpoint = "";
         
         if (config.provedor === "OpenAI") {
@@ -130,12 +129,12 @@ app.get('/testar-api', verificarToken, (req, res) => {
         } else if (config.provedor === "Gemini") {
             urlEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
         } else if (config.provedor === "HuggingFace") {
-            // 👇 ENDEREÇO CORRIGIDO (O oficial é só /v1/) 👇
+           
             urlEndpoint = "https://router.huggingface.co/v1/chat/completions";
         } else {
             return res.status(400).json({ sucesso: false, mensagem: "Provedor desconhecido." });
         }
-        // ------------------------------------
+        
 
         try {
             const responseAPI = await fetch(urlEndpoint, {
@@ -155,22 +154,22 @@ app.get('/testar-api', verificarToken, (req, res) => {
             const dataAPI = await responseAPI.json();
             const latencia = Date.now() - inicio;
 
-            // 👇 AGORA VAMOS PEGAR O ERRO REAL DA HUGGING FACE 👇
+            //  HUGGING FACE 
             if (dataAPI.error) {
-                // A Hugging Face às vezes manda o erro como string, às vezes como objeto
+                
                 let erroReal = typeof dataAPI.error === 'string' ? dataAPI.error : (dataAPI.error.message || JSON.stringify(dataAPI.error));
-                console.log(`[ERRO HUGGING FACE] Slot ${numSlot}:`, erroReal); // Mostra no terminal preta
-                return res.status(400).json({ sucesso: false, mensagem: erroReal }); // Manda pra tela
+                console.log(`[ERRO HUGGING FACE] Slot ${numSlot}:`, erroReal); 
+                return res.status(400).json({ sucesso: false, mensagem: erroReal }); 
             }
 
-            // 👇 CAÇADOR DE TOKENS UNIVERSAL 👇
+            //  EXTRAÇÃO UNIVERSAL DE TOKENS (COM VÁRIAS POSSIBILIDADES DE NOME)
             let novosTokens = 0;
             if (dataAPI.usage && dataAPI.usage.total_tokens) {
-                novosTokens = dataAPI.usage.total_tokens; // Padrão Groq / OpenAI / OpenRouter
+                novosTokens = dataAPI.usage.total_tokens; 
             } else if (dataAPI.usageMetadata && dataAPI.usageMetadata.totalTokenCount) {
-                novosTokens = dataAPI.usageMetadata.totalTokenCount; // Padrão Nativo do Google
+                novosTokens = dataAPI.usageMetadata.totalTokenCount; 
             } else {
-                novosTokens = 2; // Valor mínimo para a barra andar se a API não devolver o relatório
+                novosTokens = 2; 
             }
             const novoAcumulado = config.acumulado + novosTokens;
             
@@ -216,7 +215,7 @@ const codigosRecuperacao = {};
 
 // Rota 1: Gerar o código e exibir no terminal
 app.post('/solicitar-recuperacao', (req, res) => {
-    const { usuario } = req.body; // Aqui recebemos o e-mail vindo do campo 'rec-usuario'
+    const { usuario } = req.body; 
     
     const codigo = Math.floor(100000 + Math.random() * 900000).toString(); 
     codigosRecuperacao[usuario] = codigo; 
@@ -235,14 +234,14 @@ app.post('/redefinir-senha', async (req, res) => {
 
     if (codigosRecuperacao[usuario] && codigosRecuperacao[usuario] === codigo) {
         try {
-            // 🔐 Criptografa a nova senha (segurança em primeiro lugar!)
+            //  Criptografa a nova senha 
             const senhaCripto = await bcrypt.hash(novaSenha, 10);
             
-            // 📦 AGORA SIM: Atualiza o banco de dados real
+            // Atualiza o banco de dados real
             db.run(`UPDATE usuarios SET senha = ? WHERE email = ?`, [senhaCripto, usuario], (err) => {
                 if (err) return res.status(500).json({ sucesso: false, mensagem: "Erro ao acessar o banco." });
                 
-                delete codigosRecuperacao[usuario]; // Remove o código usado
+                delete codigosRecuperacao[usuario]; 
                 res.json({ sucesso: true, mensagem: "Senha alterada com sucesso! Tente logar agora." });
             });
         } catch (e) {
@@ -254,4 +253,4 @@ app.post('/redefinir-senha', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor rodando na porta ${PORT}`));

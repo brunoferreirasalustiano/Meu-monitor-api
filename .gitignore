@@ -1,10 +1,10 @@
-# Dependências (Pasta pesada que o servidor baixa sozinho)
+# Dependências 
 node_modules/
 
-# Arquivos de Segredos (Onde ficam suas chaves de API e senhas)
+# Arquivos de Segredos 
 .env
 
-# Banco de Dados Local (Não queremos levar seus testes locais para a nuvem)
+# Banco de Dados Local 
 *.db
 *.sqlite
 *.sqlite3

@@ -51,94 +51,85 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. LÓGICA DE LOGIN NORMAL
-        // ==========================================
-        document.getElementById('form-login').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
+    const API_URL = "https://monitorapi.onrender.com";
 
-            try {
-                const response = await fetch('http://localhost:3000/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, senha })
-                });
-                const data = await response.json();
+    // 1. LÓGICA DE LOGIN
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
 
-                if (data.sucesso) {
-                    localStorage.setItem('token_monitor', data.token);
-                    alert("Login realizado com sucesso! Entrando...");
-                    window.location.href = 'index.html'; 
-                } else {
-                    alert("Erro: " + data.mensagem);
-                }
-            } catch (err) {
-                alert("Erro ao conectar com o servidor. Verifique se o Node está rodando!");
+        try {
+            // variável API_URL entre crases
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+            const data = await response.json();
+
+            if (data.sucesso) {
+                localStorage.setItem('token_monitor', data.token);
+                alert("Login realizado com sucesso! Entrando...");
+                window.location.href = 'index.html'; 
+            } else {
+                alert("Erro: " + data.mensagem);
             }
-        });
-
-        // ==========================================
-        // 2. LÓGICA DE RECUPERAÇÃO DE SENHA
-        // ==========================================
-        
-        // Mostrar/Esconder a área de recuperação
-        document.getElementById('btn-esqueceu-senha').addEventListener('click', (e) => {
-            e.preventDefault();
-            const area = document.getElementById('area-recuperacao');
-            area.style.display = area.style.display === 'none' ? 'block' : 'none';
-        });
-
-        // Enviar pedido do código pro Backend
-        async function solicitarCodigo() {
-            const usuario = document.getElementById('rec-usuario').value;
-            if (!usuario) return alert("Digite o seu e-mail primeiro!");
-
-            try {
-                const response = await fetch('http://localhost:3000/solicitar-recuperacao', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario }) // Mandando o email como usuario
-                });
-
-                const data = await response.json();
-                alert(data.mensagem); 
-
-                if (data.sucesso) {
-                    document.getElementById('passo-pedir-codigo').style.display = 'none';
-                    document.getElementById('passo-nova-senha').style.display = 'block';
-                }
-            } catch(e) {
-                alert("Erro ao contatar o servidor.");
-            }
+        } catch (err) {
+            alert("Erro ao conectar com o servidor do Render!");
         }
+    });
 
-        // Enviar o código e a nova senha pro Backend
-        async function salvarNovaSenha() {
-            const usuario = document.getElementById('rec-usuario').value;
-            const codigo = document.getElementById('rec-codigo').value;
-            const novaSenha = document.getElementById('rec-nova-senha').value;
+    // 2. RECUPERAÇÃO DE SENHA
+    async function solicitarCodigo() {
+        const usuario = document.getElementById('rec-usuario').value;
+        if (!usuario) return alert("Digite o seu e-mail primeiro!");
 
-            if (!codigo || !novaSenha) return alert("Preencha o código e a nova senha!");
+        try {
+            
+            const response = await fetch(`${API_URL}/solicitar-recuperacao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario })
+            });
 
-            try {
-                const response = await fetch('http://localhost:3000/redefinir-senha', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, codigo, novaSenha })
-                });
+            const data = await response.json();
+            alert(data.mensagem); 
 
-                const data = await response.json();
-                alert(data.mensagem);
-
-                if (data.sucesso) {
-                    window.location.reload(); 
-                }
-            } catch(e) {
-                alert("Erro ao salvar nova senha.");
+            if (data.sucesso) {
+                document.getElementById('passo-pedir-codigo').style.display = 'none';
+                document.getElementById('passo-nova-senha').style.display = 'block';
             }
+        } catch(e) {
+            alert("Erro ao contatar o servidor.");
         }
-    </script>
+    }
+
+    async function salvarNovaSenha() {
+        const usuario = document.getElementById('rec-usuario').value;
+        const codigo = document.getElementById('rec-codigo').value;
+        const novaSenha = document.getElementById('rec-nova-senha').value;
+
+        if (!codigo || !novaSenha) return alert("Preencha o código e a nova senha!");
+
+        try {
+            
+            const response = await fetch(`${API_URL}/redefinir-senha`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, codigo, novaSenha })
+            });
+
+            const data = await response.json();
+            alert(data.mensagem);
+
+            if (data.sucesso) {
+                window.location.reload(); 
+            }
+        } catch(e) {
+            alert("Erro ao salvar nova senha.");
+        }
+    }
+</script>
 </body>
 </html>
