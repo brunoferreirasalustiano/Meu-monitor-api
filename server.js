@@ -7,12 +7,18 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 
 const app = express();
 const SECRET_KEY = "bruno_dev_portugal_2026";
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '.')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
 
 // --- CONFIGURAÇÃO DO BANCO DE DADOS ---
 const db = new sqlite3.Database('./monitor.db', (err) => {
