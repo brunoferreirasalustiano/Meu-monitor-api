@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - API Monitor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="config-container" style="max-width: 400px; margin: 100px auto;">
+        <h3>🔐 Acessar Monitor</h3>
+        
+        <form id="form-login">
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" id="login-senha" required>
+            </div>
+            <button type="submit" class="btn-salvar" style="width: 100%;">Entrar</button>
+        </form>
+
+        <p style="margin-top: 15px; font-size: 0.8rem; text-align: center;">
+            <a href="#" id="btn-esqueceu-senha" style="color: var(--primary-purple); text-decoration: none;">Esqueceu a senha?</a>
+        </p>
+        <p style="margin-top: 5px; font-size: 0.8rem; text-align: center;">
+            Não tem conta? <a href="cadastro.html" style="color: var(--primary-purple);">Cadastre-se</a>
+        </p>
+
+        <div id="area-recuperacao" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+            <h4 style="color: white; margin-bottom: 15px; text-align: center;">Recuperar Senha</h4>
+            
+            <div id="passo-pedir-codigo">
+                <div class="input-group">
+                    <input type="text" id="rec-usuario" placeholder="Digite seu E-mail" required>
+                </div>
+                <button onclick="solicitarCodigo()" class="btn-salvar" style="width: 100%; background-color: #444;">1. Receber Código</button>
+            </div>
+
+            <div id="passo-nova-senha" style="display: none;">
+                <div class="input-group">
+                    <input type="text" id="rec-codigo" placeholder="Código de 6 dígitos" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="rec-nova-senha" placeholder="Sua Nova Senha" required>
+                </div>
+                <button onclick="salvarNovaSenha()" class="btn-salvar" style="width: 100%;">2. Redefinir Senha</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. LÓGICA DE LOGIN NORMAL
+        // ==========================================
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    localStorage.setItem('token_monitor', data.token);
+                    alert("Login realizado com sucesso! Entrando...");
+                    window.location.href = 'index.html'; 
+                } else {
+                    alert("Erro: " + data.mensagem);
+                }
+            } catch (err) {
+                alert("Erro ao conectar com o servidor. Verifique se o Node está rodando!");
+            }
+        });
+
+        // ==========================================
+        // 2. LÓGICA DE RECUPERAÇÃO DE SENHA
+        // ==========================================
+        
+        // Mostrar/Esconder a área de recuperação
+        document.getElementById('btn-esqueceu-senha').addEventListener('click', (e) => {
+            e.preventDefault();
+            const area = document.getElementById('area-recuperacao');
+            area.style.display = area.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Enviar pedido do código pro Backend
+        async function solicitarCodigo() {
+            const usuario = document.getElementById('rec-usuario').value;
+            if (!usuario) return alert("Digite o seu e-mail primeiro!");
+
+            try {
+                const response = await fetch('http://localhost:3000/solicitar-recuperacao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario }) // Mandando o email como usuario
+                });
+
+                const data = await response.json();
+                alert(data.mensagem); 
+
+                if (data.sucesso) {
+                    document.getElementById('passo-pedir-codigo').style.display = 'none';
+                    document.getElementById('passo-nova-senha').style.display = 'block';
+                }
+            } catch(e) {
+                alert("Erro ao contatar o servidor.");
+            }
+        }
+
+        // Enviar o código e a nova senha pro Backend
+        async function salvarNovaSenha() {
+            const usuario = document.getElementById('rec-usuario').value;
+            const codigo = document.getElementById('rec-codigo').value;
+            const novaSenha = document.getElementById('rec-nova-senha').value;
+
+            if (!codigo || !novaSenha) return alert("Preencha o código e a nova senha!");
+
+            try {
+                const response = await fetch('http://localhost:3000/redefinir-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, codigo, novaSenha })
+                });
+
+                const data = await response.json();
+                alert(data.mensagem);
+
+                if (data.sucesso) {
+                    window.location.reload(); 
+                }
+            } catch(e) {
+                alert("Erro ao salvar nova senha.");
+            }
+        }
+    </script>
+</body>
+</html>

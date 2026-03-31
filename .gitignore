@@ -1,0 +1,19 @@
+# Dependências (Pasta pesada que o servidor baixa sozinho)
+node_modules/
+
+# Arquivos de Segredos (Onde ficam suas chaves de API e senhas)
+.env
+
+# Banco de Dados Local (Não queremos levar seus testes locais para a nuvem)
+*.db
+*.sqlite
+*.sqlite3
+
+# Arquivos do Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Logs de erro do Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
