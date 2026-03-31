@@ -118,7 +118,9 @@ app.get('/testar-api', verificarToken, async (req, res) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.key}`
+                'Authorization': `Bearer ${config.key}`, // <--- A VÍRGULA ESTAVA FALTANDO AQUI
+                'HTTP-Referer': 'https://monitorapi.onrender.com',
+                'X-Title': 'API Monitor Bruno'
             },
             body: JSON.stringify({
                 messages: [{ role: "user", content: "." }],
