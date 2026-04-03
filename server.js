@@ -139,8 +139,10 @@ app.get('/testar-api', verificarToken, async (req, res) => {
         const latencia = Date.now() - inicio;
 
         if (dataAPI.error) {
-            return res.status(400).json({ sucesso: false, mensagem: dataAPI.error.message || "Erro na API" });
-        }
+    // Se for uma string (comum na HF), usa ela. Se for objeto, tenta o .message
+    const msgReal = typeof dataAPI.error === 'string' ? dataAPI.error : (dataAPI.error.message || JSON.stringify(dataAPI.error));
+    return res.status(400).json({ sucesso: false, mensagem: msgReal });
+}
 
         // 4. Atualiza consumo de tokens
         let novosTokens = dataAPI.usage?.total_tokens || dataAPI.usageMetadata?.totalTokenCount || 2;
