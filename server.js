@@ -94,18 +94,22 @@ app.post('/configurar-slot', verificarToken, async (req, res) => {
     }
 });
 
-// --- ROTA 2: TESTAR API (UNIVERSAL) ---
+// --- ROTA 2: TESTAR API ---
 app.get('/testar-api', verificarToken, async (req, res) => {
     const numSlot = req.query.slot || 1;
+    const inicio = Date.now();
+
     try {
+        // 1. Busca configuração no banco
         const result = await pool.query('SELECT * FROM slots WHERE id = $1', [numSlot]);
         const config = result.rows[0];
 
-        if (!config || config.ativa === 0) return res.json({ sucesso: false, mensagem: "Não configurado" });
+        if (!config || config.ativa === 0) {
+            return res.json({ sucesso: false, mensagem: "Não configurado" });
+        }
 
-        const inicio = Date.now();
+        // 2. Define o Endpoint
         let urlEndpoint = "";
-        
         if (config.provedor === "OpenAI") urlEndpoint = "https://api.openai.com/v1/chat/completions";
         else if (config.provedor === "Groq") urlEndpoint = "https://api.groq.com/openai/v1/chat/completions";
         else if (config.provedor === "DeepSeek") urlEndpoint = "https://api.deepseek.com/chat/completions";
@@ -114,12 +118,13 @@ app.get('/testar-api', verificarToken, async (req, res) => {
         else if (config.provedor === "HuggingFace") urlEndpoint = "https://router.huggingface.co/v1/chat/completions";
         else return res.status(400).json({ sucesso: false, mensagem: "Provedor desconhecido." });
 
+        // 3. Chamada para a API (Fetch Único)
         const responseAPI = await fetch(urlEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.key}`, // <--- A VÍRGULA ESTAVA FALTANDO AQUI
-                'HTTP-Referer': 'https://monitorapi.onrender.com',
+                'Authorization': `Bearer ${config.key.trim()}`,
+                'HTTP-Referer': 'https://monitorapi.onrender.com', 
                 'X-Title': 'API Monitor Bruno'
             },
             body: JSON.stringify({
@@ -137,11 +142,13 @@ app.get('/testar-api', verificarToken, async (req, res) => {
             return res.status(400).json({ sucesso: false, mensagem: dataAPI.error.message || "Erro na API" });
         }
 
+        // 4. Atualiza consumo de tokens
         let novosTokens = dataAPI.usage?.total_tokens || dataAPI.usageMetadata?.totalTokenCount || 2;
-        const novoAcumulado = (config.acumulado || 0) + novosTokens;
+        const novoAcumulado = (Number(config.acumulado) || 0) + novosTokens;
         
         await pool.query('UPDATE slots SET acumulado = $1 WHERE id = $2', [novoAcumulado, numSlot]);
 
+        // 5. Retorno Sucesso
         res.json({
             sucesso: true,
             provedor: config.provedor,
@@ -151,7 +158,10 @@ app.get('/testar-api', verificarToken, async (req, res) => {
             tokens: novosTokens,
             totalGeral: novoAcumulado
         });
+
     } catch (error) {
+        // Esse CATCH pega QUALQUER erro da rota (banco ou fetch)
+        console.error("Erro na rota testar-api:", error.message);
         res.status(500).json({ sucesso: false, mensagem: "Falha: " + error.message });
     }
 });
