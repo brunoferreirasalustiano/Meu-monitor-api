@@ -279,3 +279,22 @@ setInterval(realizarFaxinaNoBanco, 24 * 60 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+
+// --- ESTRATÉGIA ANTI-SONO (KEEP-ALIVE) ---
+const URL_DA_MINHA_APP = "https://monitorapi.onrender.com"; // Sua URL real
+
+function manterVivo() {
+    // 1. Ping no próprio Servidor (Render)
+    fetch(URL_DA_MINHA_APP)
+        .then(() => console.log("💓 Heartbeat: Render acordado!"))
+        .catch((err) => console.error("❌ Erro no Heartbeat:", err.message));
+
+    // 2. Ping no Banco de Dados (Supabase)
+    // Uma query simples apenas para mostrar atividade no banco
+    pool.query('SELECT 1')
+        .then(() => console.log("🗄️ Database: Supabase ativo!"))
+        .catch((err) => console.error("❌ Erro no ping do Banco:", err.message));
+}
+
+// Executa a cada 14 minutos (o Render dorme em 15)
+setInterval(manterVivo, 14 * 60 * 1000);
