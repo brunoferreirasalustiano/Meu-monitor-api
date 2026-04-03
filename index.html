@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API MONITOR - Bruno Salustiano</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -14,20 +16,17 @@
         <h1>API<span> MONITOR</span></h1>
         <p>Status em tempo real das conexões API!</p>
     </header>
+
     <div class="user-controls" style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; width: 95%; max-width: 1100px; margin: 0 auto 20px auto;">
-    <span id="usuario-logado" style="color: var(--accent-lila); font-size: 0.9rem;">
-        <i class="fas fa-id-badge"></i> Carregando...
-    </span>
-    <button onclick="fazerLogout()" class="btn-logout">Sair</button>
-</div>
+        <span id="usuario-logado" style="color: var(--accent-lila); font-size: 0.9rem;">
+            <i class="fas fa-id-badge"></i> Carregando...
+        </span>
+        <button onclick="fazerLogout()" class="btn-logout">Sair</button>
+    </div>
 
     <main id="dashboard">
-        
         <section class="painel-geral" id="painel-geral">
             </section>
-            
-
-        
 
         <section class="conteudo-monitor">
             <article class="api-card">
@@ -87,8 +86,9 @@
                         <label>API Key</label>
                         <input type="password" id="api-key" required>
                     </div>
-                    <div class="card logs-container">
-                        <h3><i class="fas fa-list-ul"></i> Últimas Atividades</h3>
+
+                    <div class="card logs-container" style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+                        <h3 style="font-size: 1rem;"><i class="fas fa-list-ul"></i> Últimas Atividades</h3>
                         <div class="table-responsive">
                             <table id="tabela-logs">
                                 <thead>
@@ -97,24 +97,29 @@
                                         <th>Slot</th>
                                         <th>Status</th>
                                         <th>Tokens</th>
-                                        </tr>
+                                    </tr>
                                 </thead>
-                                <tbody id="corpo-logs">
-                                </tbody>
+                                <tbody id="corpo-logs"></tbody>
                             </table>
                         </div>
-                    <div class="botoes-form">
-                        <div class="botoes-form">
-    <button type="submit" class="btn-salvar">Salvar Configuração</button>
-    
-    <button type="button" onclick="baixarRelatorio()" class="btn-exportar">
-        <i class="fas fa-file-csv"></i> Exportar
-    </button>
-    
-    <button type="button" onclick="limparLogs()" class="btn-limpar">
-        <i class="fas fa-trash"></i> Limpar
-    </button>
-</div>
+                    </div>
+
+                    <div class="botoes-form" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                        <button type="submit" class="btn-salvar">Salvar Configuração</button>
+                        
+                        <div class="export-actions" style="display: flex; gap: 10px; justify-content: center;">
+                            <button type="button" onclick="baixarRelatorio(event)" class="btn-csv" style="flex: 1; background: #27ae60;">
+                                <i class="fas fa-file-csv"></i> Excel (CSV)
+                            </button>
+                            <button type="button" onclick="gerarRelatorioPDF()" class="btn-pdf" style="flex: 1; background: #e74c3c;">
+                                <i class="fas fa-file-pdf"></i> Relatório PDF
+                            </button>
+                        </div>
+                        
+                        <button type="button" onclick="limparLogs()" class="btn-limpar">
+                            <i class="fas fa-trash"></i> Limpar Logs da Tela
+                        </button>
+                    </div>
                 </form>
             </section>
         </section>
@@ -126,5 +131,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>

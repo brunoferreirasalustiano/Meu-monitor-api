@@ -358,45 +358,99 @@ window.onload = () => {
 // ==========================================
 // 7. EXPORTAR RELATÓRIO PARA CSV
 // ==========================================
-function baixarRelatorio(event) {
+async function baixarRelatorio(event) {
     if (event) event.preventDefault();
+    const token = localStorage.getItem('token_monitor');
 
-    const tabela = document.getElementById('tabela-logs');
-    const linhas = tabela.querySelectorAll('tr');
-    
-    if (linhas.length <= 1) { 
-        alert("⚠️ Não há logs registrados para exportar!");
-        return;
-    }
+    try {
+        // 1. Busca TODOS os dados do banco
+        const response = await fetch(`${API_URL}/relatorio-exportar`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
 
-    let csv = [];
-    
-    for (let i = 0; i < linhas.length; i++) {
-        let linhaArray = [];
-        let colunas = linhas[i].querySelectorAll('td, th');
-        
-        for (let j = 0; j < colunas.length; j++) {
-            let texto = colunas[j].innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
-            linhaArray.push(`"${texto}"`); 
+        if (!result.sucesso || result.dados.length === 0) {
+            return alert("⚠️ Não há dados no banco para exportar!");
         }
-        csv.push(linhaArray.join(','));
-    }
 
-    const csvString = csv.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio_api_monitor_${dataHoje}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        // 2. Monta o cabeçalho do CSV
+        let csv = ["Data/Hora,Slot,Modelo,Latencia(ms),Tokens"];
+
+        // 3. Adiciona as linhas do banco
+        result.dados.forEach(row => {
+            const dataFormatada = new Date(row.criado_em).toLocaleString('pt-BR');
+            csv.push(`"${dataFormatada}","${row.slot_nome}","${row.modelo_real}","${row.latencia}","${row.tokens}"`);
+        });
+
+        // 4. Gera o download
+        const csvString = csv.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio_completo_api_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+        link.click();
+
+    } catch (error) {
+        alert("❌ Erro ao gerar relatório do banco.");
+    }
 }
 
+async function gerarRelatorioPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const token = localStorage.getItem('token_monitor');
+
+    try {
+        // 1. Busca os dados reais do Supabase
+        const response = await fetch(`${API_URL}/relatorio-exportar`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+
+        if (!result.sucesso || result.dados.length === 0) {
+            return alert("⚠️ Sem dados para gerar o PDF.");
+        }
+
+        // 2. Cabeçalho Personalizado (O "Toque de Classe")
+        doc.setFontSize(18);
+        doc.setTextColor(138, 43, 226); // Aquele roxo (BlueViolet) que você usa
+        doc.text("Relatório de Performance - API Monitor", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        const dataGeracao = new Date().toLocaleString('pt-BR');
+        doc.text(`Gerado em: ${dataGeracao} | Desenvolvedor: Bruno`, 14, 30);
+
+        // 3. Montando a Tabela com autoTable
+        const colunas = ["Data/Hora", "Slot", "Modelo", "Latência", "Tokens"];
+        const linhas = result.dados.map(row => [
+            new Date(row.criado_em).toLocaleString('pt-BR'),
+            row.slot_nome,
+            row.modelo_real,
+            `${row.latencia}ms`,
+            `+${row.tokens}`
+        ]);
+
+        doc.autoTable({
+            startY: 40,
+            head: [colunas],
+            body: linhas,
+            theme: 'grid',
+            headStyles: { fillColor: [138, 43, 226], textColor: [255, 255, 255] }, // Cabeçalho Roxo
+            alternateRowStyles: { fillColor: [245, 245, 255] }, // Linhas zebradas
+            styles: { fontSize: 9 }
+        });
+
+        // 4. Download do Arquivo
+        const dataNome = new Date().toLocaleDateString().replace(/\//g, '-');
+        doc.save(`Relatorio_API_Bruno_${dataNome}.pdf`);
+
+    } catch (error) {
+        console.error("Erro no PDF:", error);
+        alert("❌ Falha ao gerar PDF profissional.");
+    }
+}
 // ==========================================
 // 8. CONTROLE DE ATUALIZAÇÃO AUTOMÁTICA
 // ==========================================

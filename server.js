@@ -189,6 +189,24 @@ app.get('/obter-historico', verificarToken, async (req, res) => {
     }
 });
 
+// --- ROTA PARA RELATÓRIO COMPLETO (TODOS OS LOGS) ---
+app.get('/relatorio-exportar', verificarToken, async (req, res) => {
+    try {
+        // Busca todos os testes, juntando com o nome do slot
+        const query = `
+            SELECT h.criado_em, s.nome as slot_nome, h.latencia, h.tokens, h.modelo_real
+            FROM historico_testes h
+            JOIN slots s ON h.slot_id = s.id
+            ORDER BY h.criado_em DESC
+        `;
+        const result = await pool.query(query);
+        res.json({ sucesso: true, dados: result.rows });
+    } catch (err) {
+        console.error("Erro ao exportar:", err);
+        res.status(500).json({ sucesso: false });
+    }
+});
+
 // --- ROTA 3: OBTER DADOS DO SLOT ---
 app.get('/obter-slot', verificarToken, async (req, res) => {
     const numSlot = req.query.slot;
@@ -238,6 +256,26 @@ app.post('/redefinir-senha', async (req, res) => {
         res.status(400).json({ sucesso: false, mensagem: "Código inválido." });
     }
 });
+
+// --- FUNÇÃO DE MANUTENÇÃO: POLÍTICA DE 60 DIAS ---
+async function realizarFaxinaNoBanco() {
+    try {
+        const query = `DELETE FROM historico_testes WHERE criado_em < NOW() - INTERVAL '60 days'`;
+        const result = await pool.query(query);
+        
+        if (result.rowCount > 0) {
+            console.log(`🧹 Faxina concluída: ${result.rowCount} registros antigos removidos.`);
+        }
+    } catch (err) {
+        console.error("❌ Erro na manutenção do banco:", err.message);
+    }
+}
+
+// Executa assim que o servidor liga (importante para o Render)
+realizarFaxinaNoBanco();
+
+// Agenda para rodar uma vez a cada 24 horas enquanto estiver ligado
+setInterval(realizarFaxinaNoBanco, 24 * 60 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor rodando na porta ${PORT}`));

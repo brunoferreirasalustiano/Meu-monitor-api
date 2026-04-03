@@ -174,53 +174,80 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
 .status-ok { color: var(--success-green); font-weight: bold; }
 .token-badge { background: var(--primary-purple); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
 
-/* ==========================================
+/* ===============================
    8. BOTÕES GERAIS E GRUPO DE BOTÕES
 ========================================== */
-
-/* Botões do dashboard continuam com width 100% para celular */
-#dashboard button { background-color: var(--primary-purple); color: var(--text-white); border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; width: 100%; margin-top: 10px; font-size: 0.9rem; }
-#dashboard button:hover { filter: brightness(1.2); }
-
-.botoes-form { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-
-.btn-exportar { background-color: #28a745; margin-top: 0 !important; }
-.btn-exportar:hover { background-color: #218838; }
-
-.btn-limpar { background-color: transparent; border: 1px solid var(--error-red); color: var(--error-red); margin-top: 0 !important; }
-.btn-limpar:hover { background-color: var(--error-red); color: white; }
-
-
-.btn-logout {
-    background-color: var(--error-red);
-    width: auto;
-    margin-top: 0;
-    color: white;
-    padding: 8px 15px;
-    font-size: 0.85rem;
-    margin-left: 15px;
+#dashboard button {
+    color: var(--text-white);
     border: none;
+    padding: 12px 20px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
     transition: 0.2s;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espaço entre o ícone e o texto */
 }
-.btn-logout:hover { filter: brightness(1.2); }
 
+/* Cores Específicas */
+.btn-salvar { background-color: var(--primary-purple) !important; }
+.btn-csv { background-color: #27ae60 !important; } /* Verde Excel */
+.btn-pdf { background-color: #e74c3c !important; } /* Vermelho PDF */
+
+.btn-limpar {
+    background-color: transparent !important;
+    border: 1px solid var(--error-red) !important;
+    color: var(--error-red);
+}
+
+.btn-limpar:hover {
+    background-color: var(--error-red) !important;
+    color: white;
+}
+
+/* Container dos botões de exportação */
+.export-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.export-actions button {
+    margin-top: 0 !important; /* Remove margem extra dentro do grupo */
+}
+
+#dashboard button:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}
 /* ==========================================
    9. RESPONSIVIDADE (TABLET E DESKTOP)
 ========================================== */
 
+/* Ajustes para Tablets (Telas maiores que 768px) */
 @media (min-width: 768px) {
     #dashboard { padding: 20px; }
     .painel-geral { gap: 20px; }
     .api-card, .config-container, .logs-container { padding: 40px; }
     
+    /* Organização dos botões no Tablet */
     .botoes-form {
-        flex-direction: row; 
-        justify-content: space-between;
+        flex-direction: column; /* Mantém em coluna para não apertar */
+        gap: 15px;
     }
-    .botoes-form button { margin-top: 0 !important; flex: 1; }
+
+    /* Faz o Excel e o PDF ficarem lado a lado */
+    .export-actions {
+        flex-direction: row; 
+        gap: 10px;
+    }
+
+    .botoes-form button { margin-top: 0 !important; }
     
     .nome-do-modelo { font-size: 1.2rem; }
     .gauge { width: 200px; height: 100px; }
@@ -232,8 +259,8 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
     .token-badge { padding: 3px 8px; font-size: 0.8rem; }
 }
 
+/* Ajustes para Computadores (Telas maiores que 1024px) */
 @media (min-width: 1024px) {
-    /*  MINI-CARDS PARA AUTO-FIT NO DESKTOP */
     .painel-geral {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
@@ -243,10 +270,8 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
         gap: 10px;
         text-align: left;
     }
-    .mini-card-header { font-size: 1.1rem; }
-    .mini-card-modelo { font-size: 0.85rem; }
-    .mini-card-consumo { font-size: 0.9rem; }
-    
+
+    /* Faz o monitor e a configuração ficarem um ao lado do outro */
     .conteudo-monitor {
         flex-direction: row; 
         align-items: stretch;
