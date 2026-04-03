@@ -88,6 +88,37 @@ function atualizarGraficoNaTela() {
     graficoSlot.update();
 }
 
+// --- NOVA FUNÇÃO: BUSCA DADOS NO SUPABASE ---
+async function carregarHistoricoGrafico(numSlot) {
+    const token = localStorage.getItem('token_monitor');
+    
+    try {
+        const response = await fetch(`${API_URL}/obter-historico?slot=${numSlot}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (data.sucesso && data.dados.length > 0) {
+            // Limpa o histórico atual para não duplicar
+            historicoLatencia[numSlot].labels = [];
+            historicoLatencia[numSlot].data = [];
+
+            // Mapeia o que veio do banco para o formato do gráfico
+            data.dados.forEach(item => {
+                const dataHora = new Date(item.criado_em).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                historicoLatencia[numSlot].labels.push(dataHora);
+                historicoLatencia[numSlot].data.push(item.latencia);
+            });
+
+            // Atualiza o desenho do gráfico na tela
+            atualizarGraficoNaTela();
+        }
+    } catch (error) {
+        console.error("Erro ao carregar histórico do banco:", error);
+    }
+}
+
 // ==========================================
 // 3. VARIÁVEIS E TROCA DE SLOT
 // ==========================================
@@ -102,6 +133,9 @@ async function trocarSlot(numero) {
         card.style.borderColor = 'var(--gray)';
         card.style.transform = 'translateY(0)';
     });
+
+    atualizarGraficoNaTela();
+    carregarHistoricoGrafico(numero);
     
     const cards = document.querySelectorAll('.mini-card');
     if(cards[numero - 1]) {
@@ -273,6 +307,7 @@ function limparLogs() {
 window.onload = () => {
     carregarVisaoGlobal(); 
     iniciarGrafico(); 
+    carregarHistoricoGrafico(slotAtivo);
 
     const formulario = document.getElementById('form-config-api');
     

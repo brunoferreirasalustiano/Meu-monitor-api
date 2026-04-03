@@ -129,7 +129,7 @@ app.get('/testar-api', verificarToken, async (req, res) => {
             },
             body: JSON.stringify({
                 messages: [{ role: "user", content: "." }],
-                model: config.modelo,
+                model: config.modelo.trim(), // <--- O .trim() é obrigatório para produto real
                 max_tokens: 1,
                 temperature: 0,
             })
@@ -150,6 +150,11 @@ app.get('/testar-api', verificarToken, async (req, res) => {
         
         await pool.query('UPDATE slots SET acumulado = $1 WHERE id = $2', [novoAcumulado, numSlot]);
 
+        await pool.query(
+            'INSERT INTO historico_testes (slot_id, latencia, sucesso, tokens, modelo_real) VALUES ($1, $2, $3, $4, $5)',
+            [numSlot, latencia, true, novosTokens, dataAPI.model || config.modelo]
+        );
+
         // 5. Retorno Sucesso
         res.json({
             sucesso: true,
@@ -165,6 +170,22 @@ app.get('/testar-api', verificarToken, async (req, res) => {
         // Esse CATCH pega QUALQUER erro da rota (banco ou fetch)
         console.error("Erro na rota testar-api:", error.message);
         res.status(500).json({ sucesso: false, mensagem: "Falha: " + error.message });
+    }
+});
+
+// --- NOVA ROTA: RECUPERAR O HISTÓRICO DO GRÁFICO---
+app.get('/obter-historico', verificarToken, async (req, res) => {
+    const numSlot = req.query.slot || 1;
+    try {
+        const result = await pool.query(
+            'SELECT latencia, criado_em FROM historico_testes WHERE slot_id = $1 ORDER BY criado_em DESC LIMIT 20',
+            [numSlot]
+        );
+        // Inverter para mostrar do mais antigo para o mais novo
+        res.json({ sucesso: true, dados: result.rows.reverse() });
+    } catch (err) {
+        console.error("Erro ao buscar histórico:", err.message);
+        res.status(500).json({ sucesso: false, mensagem: "Erro ao buscar histórico" });
     }
 });
 
