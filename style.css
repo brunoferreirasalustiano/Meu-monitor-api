@@ -174,7 +174,7 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
 .status-ok { color: var(--success-green); font-weight: bold; }
 .token-badge { background: var(--primary-purple); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
 
-/* ===============================
+/* ==========================================
    8. BOTÕES GERAIS E GRUPO DE BOTÕES
 ========================================== */
 #dashboard button {
@@ -191,10 +191,33 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Espaço entre o ícone e o texto */
+    gap: 8px;
 }
 
-/* Cores Específicas */
+/* DESTAQUE: Botão Verificar Agora (dentro do card central) */
+.api-card button {
+    background-color: var(--primary-purple) !important;
+    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+}
+
+/* Botão Sair (Cabeçalho - discreto e elegante) */
+.btn-logout {
+    background-color: transparent !important;
+    border: 1px solid var(--error-red) !important;
+    color: var(--error-red) !important;
+    width: auto !important;
+    padding: 6px 15px !important;
+    font-size: 0.8rem !important;
+    margin-left: 15px;
+    font-weight: 600;
+}
+
+.btn-logout:hover {
+    background-color: var(--error-red) !important;
+    color: white !important;
+}
+
+/* Cores dos Relatórios */
 .btn-salvar { background-color: var(--primary-purple) !important; }
 .btn-csv { background-color: #27ae60 !important; } /* Verde Excel */
 .btn-pdf { background-color: #e74c3c !important; } /* Vermelho PDF */
@@ -218,30 +241,28 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
 }
 
 .export-actions button {
-    margin-top: 0 !important; /* Remove margem extra dentro do grupo */
+    margin-top: 0 !important;
 }
 
 #dashboard button:hover {
     filter: brightness(1.2);
     transform: translateY(-2px);
 }
+
 /* ==========================================
    9. RESPONSIVIDADE (TABLET E DESKTOP)
 ========================================== */
 
-/* Ajustes para Tablets (Telas maiores que 768px) */
 @media (min-width: 768px) {
     #dashboard { padding: 20px; }
     .painel-geral { gap: 20px; }
     .api-card, .config-container, .logs-container { padding: 40px; }
     
-    /* Organização dos botões no Tablet */
     .botoes-form {
-        flex-direction: column; /* Mantém em coluna para não apertar */
+        flex-direction: column;
         gap: 15px;
     }
 
-    /* Faz o Excel e o PDF ficarem lado a lado */
     .export-actions {
         flex-direction: row; 
         gap: 10px;
@@ -252,14 +273,12 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
     .nome-do-modelo { font-size: 1.2rem; }
     .gauge { width: 200px; height: 100px; }
     .gauge-body { width: 200px; height: 200px; }
-    .gauge-fill { border-radius: 0 0 100px 100px; }
     .gauge-cover { font-size: 1.5rem; }
     
     table { font-size: 0.9rem; }
     .token-badge { padding: 3px 8px; font-size: 0.8rem; }
 }
 
-/* Ajustes para Computadores (Telas maiores que 1024px) */
 @media (min-width: 1024px) {
     .painel-geral {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -271,7 +290,6 @@ td { padding: 8px 0; border-bottom: 1px solid #222; }
         text-align: left;
     }
 
-    /* Faz o monitor e a configuração ficarem um ao lado do outro */
     .conteudo-monitor {
         flex-direction: row; 
         align-items: stretch;
