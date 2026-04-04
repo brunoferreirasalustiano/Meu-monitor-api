@@ -66,7 +66,7 @@ app.post('/login', async (req, res) => {
         const senhaBatendo = await bcrypt.compare(senha, user.senha);
         if (!senhaBatendo) return res.status(401).json({ sucesso: false, mensagem: "Senha incorreta" });
 
-        const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '2h' });
+        const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '30d' });
         res.json({ sucesso: true, token });
     } catch (e) {
         res.status(500).json({ sucesso: false, mensagem: "Erro no servidor" });
