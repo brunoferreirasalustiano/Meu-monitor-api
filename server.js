@@ -10,16 +10,16 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const app = express();
-const SECRET_KEY = "bruno_dev_portugal_2026";
+const SECRET_KEY = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Rota inicial para abrir o login
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
+// Rota inicial para abrir o login - mudança nesse item para testar o backend no Back4App
+//app.get('/', (req, res) => {
+    //res.sendFile(path.join(__dirname, 'login.html'));
+//});
 
 // --- CONFIGURAÇÃO DO BANCO DE DADOS (SUPABASE) ---
 const pool = new Pool({
@@ -124,7 +124,7 @@ app.get('/testar-api', verificarToken, async (req, res) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${config.key.trim()}`,
-                'HTTP-Referer': 'https://monitorapi.onrender.com', 
+                'HTTP-Referer': 'https://brunoferreirasalustiano.github.io/monitor-api-frontend/login.html', 
                 'X-Title': 'API Monitor Bruno'
             },
             body: JSON.stringify({
