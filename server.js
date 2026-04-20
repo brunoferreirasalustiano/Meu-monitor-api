@@ -23,8 +23,8 @@ app.use(express.static(path.join(__dirname, '.')));
 
 // --- CONFIGURAÇÃO DO BANCO DE DADOS (SUPABASE) ---
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    connectionString: process.env.DATABASE_URL, 
+    ssl: { require: true, rejectUnauthorized: false }
 });
 
 pool.on('connect', () => console.log("🚀 Conectado ao PostgreSQL (Supabase)"));
