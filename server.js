@@ -1,5 +1,5 @@
 // ==========================================
-// server.js - MOTOR UNIVERSAL 
+// server.js - VERSÃO FINAL VERCEL
 // ==========================================
 require('dotenv').config();
 const express = require('express');
@@ -9,9 +9,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret_para_teste';
+const SECRET_KEY = process.env.JWT_SECRET || 'chave_mestra_monitor';
 
-// 1. CONFIGURAÇÃO DE CORS (VERSÃO QUE VOCÊ FEZ)
+// 1. CONFIGURAÇÃO DE CORS
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -21,13 +21,11 @@ app.options('*', cors());
 
 app.use(express.json());
 
-// 2. CONFIGURAÇÃO DO BANCO DE DADOS (APENAS UMA VEZ)
+// 2. CONFIGURAÇÃO DO BANCO DE DADOS
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, 
     ssl: { require: true, rejectUnauthorized: false }
 });
-
-pool.on('connect', () => console.log("🚀 Conectado ao PostgreSQL (Supabase)"));
 
 // 3. MIDDLEWARE DE PROTEÇÃO
 function verificarToken(req, res, next) {
@@ -42,6 +40,8 @@ function verificarToken(req, res, next) {
 }
 
 // --- ROTAS DE AUTENTICAÇÃO ---
+app.get('/', (req, res) => res.send("API Monitor Online (Vercel)"));
+
 app.post('/cadastro', async (req, res) => {
     const { email, senha } = req.body;
     try {
@@ -171,9 +171,5 @@ app.post('/solicitar-recuperacao', (req, res) => {
     res.json({ sucesso: true, mensagem: "Código gerado! Verifique os logs." });
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-});
-
-
+// EXPORTAÇÃO PARA VERCEL (IMPORTANTE)
+module.exports = app;
