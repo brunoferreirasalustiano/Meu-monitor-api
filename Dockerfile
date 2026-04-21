@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instala as bibliotecas (node_modules) lá no servidor
-RUN npm install
+RUN npm install --omit=dev
 
 # Copia o resto dos arquivos do seu motor
 COPY . .

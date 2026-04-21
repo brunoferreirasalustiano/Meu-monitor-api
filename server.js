@@ -12,14 +12,27 @@ const path = require('path');
 const app = express();
 const SECRET_KEY = process.env.JWT_SECRET;
 
-app.use(cors({
-    origin: '*', // Permite qualquer origem (incluindo seu GitHub Pages)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors()); 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '.')));
+
+if (!process.env.DATABASE_URL || !process.env.JWT_SECRET) {
+    console.error("❌ ERRO: Variáveis de ambiente DATABASE_URL ou JWT_SECRET não configuradas!");
+}
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL, 
+    ssl: { require: true, rejectUnauthorized: false }
+});
 
 // Rota inicial para abrir o login - mudança nesse item para testar o backend no Back4App
 //app.get('/', (req, res) => {
@@ -282,10 +295,10 @@ realizarFaxinaNoBanco();
 // Agenda para rodar uma vez a cada 24 horas enquanto estiver ligado
 setInterval(realizarFaxinaNoBanco, 24 * 60 * 60 * 1000);
 
-const PORT = process.env.PORT || 8080; // Back4App prefere 8080 por padrão
+const PORT = process.env.PORT || 8080; // Back4App 8080 por padrão
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`📡 Banco de dados configurado: ${process.env.DATABASE_URL ? "SIM" : "NÃO"}`);
+    //console.log(`📡 Banco de dados configurado: ${process.env.DATABASE_URL ? "SIM" : "NÃO"}`);
 });
 
