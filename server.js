@@ -7,22 +7,21 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 
 const app = express();
-const SECRET_KEY = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret_para_teste';
 
-// 1. CONFIGURAÇÃO DE CORS (CORRIGIDA)
+// 1. CONFIGURAÇÃO DE CORS (VERSÃO QUE VOCÊ FEZ)
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Resposta explícita para o preflight (OPTIONS)
 app.options('*', cors()); 
 
-// 2. CONFIGURAÇÃO DO BANCO DE DADOS
+app.use(express.json());
+
+// 2. CONFIGURAÇÃO DO BANCO DE DADOS (APENAS UMA VEZ)
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, 
     ssl: { require: true, rejectUnauthorized: false }
@@ -165,26 +164,11 @@ app.get('/status-geral', async (req, res) => {
     }
 });
 
-// --- RECUPERAÇÃO DE SENHA ---
-const codigosRecuperacao = {}; 
 app.post('/solicitar-recuperacao', (req, res) => {
     const { usuario } = req.body; 
     const codigo = Math.floor(100000 + Math.random() * 900000).toString(); 
-    codigosRecuperacao[usuario] = codigo; 
     console.log(`🔐 CÓDIGO PARA ${usuario}: ${codigo}`);
-    res.json({ sucesso: true, mensagem: "Código gerado! Verifique os logs do servidor." });
-});
-
-app.post('/redefinir-senha', async (req, res) => {
-    const { usuario, codigo, novaSenha } = req.body;
-    if (codigosRecuperacao[usuario] === codigo) {
-        const senhaCripto = await bcrypt.hash(novaSenha, 10);
-        await pool.query('UPDATE usuarios SET senha = $1 WHERE email = $2', [senhaCripto, usuario]);
-        delete codigosRecuperacao[usuario];
-        res.json({ sucesso: true, mensagem: "Senha alterada!" });
-    } else {
-        res.status(400).json({ sucesso: false, mensagem: "Código inválido." });
-    }
+    res.json({ sucesso: true, mensagem: "Código gerado! Verifique os logs." });
 });
 
 const PORT = process.env.PORT || 8080;
