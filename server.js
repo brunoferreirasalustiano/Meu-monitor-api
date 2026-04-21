@@ -13,18 +13,14 @@ const app = express();
 const SECRET_KEY = process.env.JWT_SECRET;
 
 // 1. CONFIGURAÇÃO DE CORS (CORRIGIDA)
-app.use(cors());
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(200);
-    }
-    next();
-});
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(express.json());
+// Resposta explícita para o preflight (OPTIONS)
+app.options('*', cors()); 
 
 // 2. CONFIGURAÇÃO DO BANCO DE DADOS
 const pool = new Pool({
