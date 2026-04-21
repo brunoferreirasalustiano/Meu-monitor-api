@@ -171,5 +171,22 @@ app.post('/solicitar-recuperacao', (req, res) => {
     res.json({ sucesso: true, mensagem: "Código gerado! Verifique os logs." });
 });
 
+app.get('/relatorio-exportar', verificarToken, async (req, res) => {
+    try {
+        // Busca todos os testes, juntando com o nome do slot
+        const query = `
+            SELECT h.criado_em, s.nome as slot_nome, h.latencia, h.tokens, h.modelo_real
+            FROM historico_testes h
+            JOIN slots s ON h.slot_id = s.id
+            ORDER BY h.criado_em DESC
+        `;
+        const result = await pool.query(query);
+        res.json({ sucesso: true, dados: result.rows });
+    } catch (err) {
+        console.error("Erro ao exportar:", err);
+        res.status(500).json({ sucesso: false, mensagem: "Erro ao buscar dados do relatório" });
+    }
+});
+
 // EXPORTAÇÃO PARA VERCEL (IMPORTANTE)
 module.exports = app;
